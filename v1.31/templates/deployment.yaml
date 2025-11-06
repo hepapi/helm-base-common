@@ -13,7 +13,7 @@ spec:
   strategy:
     type: RollingUpdate
     rollingUpdate:
-      maxUnavailable: 25%
+      maxUnavailable: 25% 
       maxSurge: 25%
   selector:
     matchLabels:
@@ -31,20 +31,12 @@ spec:
       imagePullSecrets:
         {{- toYaml . | nindent 8 }}
       {{- end }}
-
       serviceAccountName: {{ include "base-common.serviceAccountName" . }}
-
       securityContext:
         {{- toYaml .Values.podSecurityContext | nindent 8 }}
-
-      {{- if .Values.initContainers }}
-      initContainers:
-{{ toYaml .Values.initContainers | indent 8 }}
-      {{- end }}
-
       volumes:
         {{- $persistence := .Values.persistence | default dict }}
-        {{- $persistenceEnabled := $persistence.enabled | default false }}
+        {{- $persistenceEnabled := $persistence.enabled | default false }} 
         {{- if and (typeIs "bool" $persistenceEnabled) (eq $persistenceEnabled true) (not $persistence.existingClaim) }}
         - name: {{ .Values.nameOverride }}-volume
           persistentVolumeClaim:
@@ -58,14 +50,12 @@ spec:
           configMap:
             name: {{ .Values.volumeConfigMap.name }}
         {{- end }}
-
       containers:
         - name: {{ .Values.nameOverride }}
           securityContext:
             {{- toYaml .Values.securityContext | nindent 12 }}
           image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
           imagePullPolicy: {{ .Values.image.pullPolicy }}
-
           {{- if or .Values.extraConfigMap .Values.extraSecret .Values.externalSecret }}
           envFrom:
             {{- if .Values.extraConfigMap }}
@@ -78,19 +68,12 @@ spec:
             {{- end }}
             {{- if .Values.externalSecret }}
             - secretRef:
-                name: {{ .Values.externalSecret.target.name | default .Values.externalSecret.name }}
+                name: {{ .Values.externalSecret.name }}
             {{- end }}
           {{- end }}
-
-          {{- if .Values.env }}
-          env:
-{{ toYaml .Values.env | indent 12 }}
-          {{- end }}
-
           {{- if .Values.container }}
-{{ toYaml .Values.container | indent 10 }}
+          {{- toYaml .Values.container | nindent 10 }}
           {{- end }}
-
           volumeMounts:
             {{- if and (typeIs "bool" $persistenceEnabled) (eq $persistenceEnabled true) (not $persistence.existingClaim) }}
             - name: {{ .Values.nameOverride }}-volume
@@ -104,76 +87,10 @@ spec:
               mountPath: {{ .Values.volumeConfigMap.mountPath }}
               subPath: {{ .Values.volumeConfigMap.subPath }}
             {{- end }}
-
           ports:
-            - name: {{ .Values.service.portName | default "http" }}
+            - name: http
               containerPort: {{ .Values.service.targetPort }}
               protocol: TCP
-
-          {{- /* ===================== gRPC PROBES ===================== */}}
-          {{- if and .Values.service.grpcProbe .Values.service.grpcProbe.enabled }}
-          livenessProbe:
-            grpc:
-              port: {{ .Values.service.grpcProbe.port | default .Values.service.targetPort }}
-            {{- with .Values.service.grpcProbe }}
-            {{- if .initialDelaySeconds }}
-            initialDelaySeconds: {{ .initialDelaySeconds }}
-            {{- end }}
-            {{- if .periodSeconds }}
-            periodSeconds: {{ .periodSeconds }}
-            {{- end }}
-            {{- if .timeoutSeconds }}
-            timeoutSeconds: {{ .timeoutSeconds }}
-            {{- end }}
-            {{- if .failureThreshold }}
-            failureThreshold: {{ .failureThreshold }}
-            {{- end }}
-            {{- if .successThreshold }}
-            successThreshold: {{ .successThreshold }}
-            {{- end }}
-            {{- end }}
-
-          readinessProbe:
-            grpc:
-              port: {{ .Values.service.grpcProbe.port | default .Values.service.targetPort }}
-            {{- with .Values.service.grpcProbe }}
-            {{- if .readinessInitialDelaySeconds }}
-            initialDelaySeconds: {{ .readinessInitialDelaySeconds }}
-            {{- end }}
-            {{- if .readinessPeriodSeconds }}
-            periodSeconds: {{ .readinessPeriodSeconds }}
-            {{- end }}
-            {{- if .readinessTimeoutSeconds }}
-            timeoutSeconds: {{ .readinessTimeoutSeconds }}
-            {{- end }}
-            {{- if .readinessFailureThreshold }}
-            failureThreshold: {{ .readinessFailureThreshold }}
-            {{- end }}
-            {{- if .readinessSuccessThreshold }}
-            successThreshold: {{ .readinessSuccessThreshold }}
-            {{- end }}
-            {{- end }}
-
-          {{- if and .Values.service.startupProbeGrpc .Values.service.startupProbeGrpc.enabled }}
-          startupProbe:
-            grpc:
-              port: {{ .Values.service.startupProbeGrpc.port | default (.Values.service.grpcProbe.port | default .Values.service.targetPort) }}
-            {{- with .Values.service.startupProbeGrpc }}
-            {{- if .periodSeconds }}
-            periodSeconds: {{ .periodSeconds }}
-            {{- end }}
-            {{- if .failureThreshold }}
-            failureThreshold: {{ .failureThreshold }}
-            {{- end }}
-            {{- if .timeoutSeconds }}
-            timeoutSeconds: {{ .timeoutSeconds }}
-            {{- end }}
-            {{- end }}
-          {{- end }}
-
-          {{- else }}
-
-          {{- /* ===================== HTTP PROBES (BACKWARD COMPATIBLE) ===================== */}}
           {{- if (.Values.service.livenessProbe).enabled }}
           livenessProbe:
             httpGet:
@@ -185,50 +102,40 @@ spec:
             failureThreshold: {{ .Values.service.livenessProbe.failureThreshold | default 3 }}
             successThreshold: {{ .Values.service.livenessProbe.successThreshold | default 1 }}
           {{- end }}
-
           {{- if (.Values.service.startupProbe).enabled }}
           startupProbe:
             httpGet:
               path: {{ .Values.service.startupProbe.path }}
               port: {{ .Values.service.startupProbe.port }}
-            periodSeconds: {{ .Values.service.startupProbe.periodSeconds }}
+            periodSeconds: {{ .Values.service.periodSeconds }}
             failureThreshold: {{ .Values.service.startupProbe.failureThreshold }}
             timeoutSeconds: {{ .Values.service.startupProbe.timeoutSeconds }}
           {{- end }}
-
           {{- if (.Values.service.readinessProbe).enabled }}
           readinessProbe:
             httpGet:
               path: {{ .Values.service.readinessProbe.path }}
               port: {{ .Values.service.readinessProbe.port }}
           {{- end }}
-
-          {{- end }}
-
           resources:
             {{- toYaml .Values.resources | nindent 12 }}
-
       {{- with .Values.nodeSelector }}
       nodeSelector:
         {{- toYaml . | nindent 8 }}
       {{- end }}
-
       {{- with .Values.affinity }}
       affinity:
         {{- toYaml . | nindent 8 }}
       {{- end }}
-
       {{- with .Values.tolerations }}
       tolerations:
         {{- toYaml . | nindent 8 }}
       {{- end }}
-
       {{- if .Values.dnsConfig }}
       dnsConfig:
         nameservers:
-{{ toYaml .Values.dnsConfig.nameservers | indent 8 }}
+      {{ toYaml .Values.dnsConfig.nameservers | indent 4 }}
         searches:
-{{ toYaml .Values.dnsConfig.searches | indent 8 }}
+      {{ toYaml .Values.dnsConfig.searches | indent 4 }}
       {{- end }}
-
       dnsPolicy: {{ .Values.dnsPolicy | default "ClusterFirst" }}
