@@ -88,7 +88,7 @@ spec:
           {{- end }}
 
           {{- if .Values.container }}
-          {{- toYaml .Values.container | nindent 10 }}
+{{ toYaml .Values.container | indent 10 }}
           {{- end }}
 
           volumeMounts:
@@ -110,37 +110,44 @@ spec:
               containerPort: {{ .Values.service.targetPort }}
               protocol: TCP
 
-          {{- /* ===== Probes: gRPC > HTTP (opsiyonel, backward compatible) ===== */ -}}
+          {{- /* ===================== gRPC PROBES ===================== */}}
           {{- if and .Values.service.grpcProbe .Values.service.grpcProbe.enabled }}
           livenessProbe:
             grpc:
               port: {{ .Values.service.grpcProbe.port | default .Values.service.targetPort }}
-            {{- if hasKey .Values.service.grpcProbe "initialDelaySeconds" }}initialDelaySeconds: {{ .Values.service.grpcProbe.initialDelaySeconds }}{{- end }}
-            {{- if hasKey .Values.service.grpcProbe "periodSeconds" }}periodSeconds: {{ .Values.service.grpcProbe.periodSeconds }}{{- end }}
-            {{- if hasKey .Values.service.grpcProbe "timeoutSeconds" }}timeoutSeconds: {{ .Values.service.grpcProbe.timeoutSeconds }}{{- end }}
-            {{- if hasKey .Values.service.grpcProbe "failureThreshold" }}failureThreshold: {{ .Values.service.grpcProbe.failureThreshold }}{{- end }}
-            {{- if hasKey .Values.service.grpcProbe "successThreshold" }}successThreshold: {{ .Values.service.grpcProbe.successThreshold }}{{- end }}
+            {{- with .Values.service.grpcProbe }}
+            {{- if .initialDelaySeconds }}initialDelaySeconds: {{ .initialDelaySeconds }}{{- end }}
+            {{- if .periodSeconds }}periodSeconds: {{ .periodSeconds }}{{- end }}
+            {{- if .timeoutSeconds }}timeoutSeconds: {{ .timeoutSeconds }}{{- end }}
+            {{- if .failureThreshold }}failureThreshold: {{ .failureThreshold }}{{- end }}
+            {{- if .successThreshold }}successThreshold: {{ .successThreshold }}{{- end }}
+            {{- end }}
 
           readinessProbe:
             grpc:
               port: {{ .Values.service.grpcProbe.port | default .Values.service.targetPort }}
-            {{- if hasKey .Values.service.grpcProbe "readinessInitialDelaySeconds" }}initialDelaySeconds: {{ .Values.service.grpcProbe.readinessInitialDelaySeconds }}{{- end }}
-            {{- if hasKey .Values.service.grpcProbe "readinessPeriodSeconds" }}periodSeconds: {{ .Values.service.grpcProbe.readinessPeriodSeconds }}{{- end }}
-            {{- if hasKey .Values.service.grpcProbe "readinessTimeoutSeconds" }}timeoutSeconds: {{ .Values.service.grpcProbe.readinessTimeoutSeconds }}{{- end }}
-            {{- if hasKey .Values.service.grpcProbe "readinessFailureThreshold" }}failureThreshold: {{ .Values.service.grpcProbe.readinessFailureThreshold }}{{- end }}
-            {{- if hasKey .Values.service.grpcProbe "readinessSuccessThreshold" }}successThreshold: {{ .Values.service.grpcProbe.readinessSuccessThreshold }}{{- end }}
+            {{- with .Values.service.grpcProbe }}
+            {{- if .readinessInitialDelaySeconds }}initialDelaySeconds: {{ .readinessInitialDelaySeconds }}{{- end }}
+            {{- if .readinessPeriodSeconds }}periodSeconds: {{ .readinessPeriodSeconds }}{{- end }}
+            {{- if .readinessTimeoutSeconds }}timeoutSeconds: {{ .readinessTimeoutSeconds }}{{- end }}
+            {{- if .readinessFailureThreshold }}failureThreshold: {{ .readinessFailureThreshold }}{{- end }}
+            {{- if .readinessSuccessThreshold }}successThreshold: {{ .readinessSuccessThreshold }}{{- end }}
+            {{- end }}
 
           {{- if and .Values.service.startupProbeGrpc .Values.service.startupProbeGrpc.enabled }}
           startupProbe:
             grpc:
               port: {{ .Values.service.startupProbeGrpc.port | default (.Values.service.grpcProbe.port | default .Values.service.targetPort) }}
-            {{- if hasKey .Values.service.startupProbeGrpc "periodSeconds" }}periodSeconds: {{ .Values.service.startupProbeGrpc.periodSeconds }}{{- end }}
-            {{- if hasKey .Values.service.startupProbeGrpc "failureThreshold" }}failureThreshold: {{ .Values.service.startupProbeGrpc.failureThreshold }}{{- end }}
-            {{- if hasKey .Values.service.startupProbeGrpc "timeoutSeconds" }}timeoutSeconds: {{ .Values.service.startupProbeGrpc.timeoutSeconds }}{{- end }}
+            {{- with .Values.service.startupProbeGrpc }}
+            {{- if .periodSeconds }}periodSeconds: {{ .periodSeconds }}{{- end }}
+            {{- if .failureThreshold }}failureThreshold: {{ .failureThreshold }}{{- end }}
+            {{- if .timeoutSeconds }}timeoutSeconds: {{ .timeoutSeconds }}{{- end }}
+            {{- end }}
           {{- end }}
 
           {{- else }}
 
+          {{- /* ===================== HTTP PROBES (BACKWARD COMPATIBLE) ===================== */}}
           {{- if (.Values.service.livenessProbe).enabled }}
           livenessProbe:
             httpGet:
@@ -158,7 +165,7 @@ spec:
             httpGet:
               path: {{ .Values.service.startupProbe.path }}
               port: {{ .Values.service.startupProbe.port }}
-            periodSeconds: {{ .Values.service.periodSeconds }}
+            periodSeconds: {{ .Values.service.startupProbe.periodSeconds }}
             failureThreshold: {{ .Values.service.startupProbe.failureThreshold }}
             timeoutSeconds: {{ .Values.service.startupProbe.timeoutSeconds }}
           {{- end }}
@@ -193,9 +200,9 @@ spec:
       {{- if .Values.dnsConfig }}
       dnsConfig:
         nameservers:
-      {{ toYaml .Values.dnsConfig.nameservers | indent 4 }}
+{{ toYaml .Values.dnsConfig.nameservers | indent 8 }}
         searches:
-      {{ toYaml .Values.dnsConfig.searches | indent 4 }}
+{{ toYaml .Values.dnsConfig.searches | indent 8 }}
       {{- end }}
 
       dnsPolicy: {{ .Values.dnsPolicy | default "ClusterFirst" }}
