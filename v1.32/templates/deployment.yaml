@@ -31,9 +31,17 @@ spec:
       imagePullSecrets:
         {{- toYaml . | nindent 8 }}
       {{- end }}
+
       serviceAccountName: {{ include "base-common.serviceAccountName" . }}
+
       securityContext:
         {{- toYaml .Values.podSecurityContext | nindent 8 }}
+
+      {{- if .Values.initContainers }}
+      initContainers:
+{{ toYaml .Values.initContainers | indent 8 }}
+      {{- end }}
+
       volumes:
         {{- $persistence := .Values.persistence | default dict }}
         {{- $persistenceEnabled := $persistence.enabled | default false }}
@@ -133,14 +141,17 @@ spec:
       nodeSelector:
         {{- toYaml . | nindent 8 }}
       {{- end }}
+
       {{- with .Values.affinity }}
       affinity:
         {{- toYaml . | nindent 8 }}
       {{- end }}
+
       {{- with .Values.tolerations }}
       tolerations:
         {{- toYaml . | nindent 8 }}
       {{- end }}
+
       {{- if .Values.dnsConfig }}
       dnsConfig:
         nameservers:
@@ -148,4 +159,5 @@ spec:
         searches:
       {{ toYaml .Values.dnsConfig.searches | indent 4 }}
       {{- end }}
+
       dnsPolicy: {{ .Values.dnsPolicy | default "ClusterFirst" }}
