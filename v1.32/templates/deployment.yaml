@@ -116,22 +116,42 @@ spec:
             grpc:
               port: {{ .Values.service.grpcProbe.port | default .Values.service.targetPort }}
             {{- with .Values.service.grpcProbe }}
-            {{- if .initialDelaySeconds }}initialDelaySeconds: {{ .initialDelaySeconds }}{{- end }}
-            {{- if .periodSeconds }}periodSeconds: {{ .periodSeconds }}{{- end }}
-            {{- if .timeoutSeconds }}timeoutSeconds: {{ .timeoutSeconds }}{{- end }}
-            {{- if .failureThreshold }}failureThreshold: {{ .failureThreshold }}{{- end }}
-            {{- if .successThreshold }}successThreshold: {{ .successThreshold }}{{- end }}
+            {{- if .initialDelaySeconds }}
+            initialDelaySeconds: {{ .initialDelaySeconds }}
+            {{- end }}
+            {{- if .periodSeconds }}
+            periodSeconds: {{ .periodSeconds }}
+            {{- end }}
+            {{- if .timeoutSeconds }}
+            timeoutSeconds: {{ .timeoutSeconds }}
+            {{- end }}
+            {{- if .failureThreshold }}
+            failureThreshold: {{ .failureThreshold }}
+            {{- end }}
+            {{- if .successThreshold }}
+            successThreshold: {{ .successThreshold }}
+            {{- end }}
             {{- end }}
 
           readinessProbe:
             grpc:
               port: {{ .Values.service.grpcProbe.port | default .Values.service.targetPort }}
             {{- with .Values.service.grpcProbe }}
-            {{- if .readinessInitialDelaySeconds }}initialDelaySeconds: {{ .readinessInitialDelaySeconds }}{{- end }}
-            {{- if .readinessPeriodSeconds }}periodSeconds: {{ .readinessPeriodSeconds }}{{- end }}
-            {{- if .readinessTimeoutSeconds }}timeoutSeconds: {{ .readinessTimeoutSeconds }}{{- end }}
-            {{- if .readinessFailureThreshold }}failureThreshold: {{ .readinessFailureThreshold }}{{- end }}
-            {{- if .readinessSuccessThreshold }}successThreshold: {{ .readinessSuccessThreshold }}{{- end }}
+            {{- if .readinessInitialDelaySeconds }}
+            initialDelaySeconds: {{ .readinessInitialDelaySeconds }}
+            {{- end }}
+            {{- if .readinessPeriodSeconds }}
+            periodSeconds: {{ .readinessPeriodSeconds }}
+            {{- end }}
+            {{- if .readinessTimeoutSeconds }}
+            timeoutSeconds: {{ .readinessTimeoutSeconds }}
+            {{- end }}
+            {{- if .readinessFailureThreshold }}
+            failureThreshold: {{ .readinessFailureThreshold }}
+            {{- end }}
+            {{- if .readinessSuccessThreshold }}
+            successThreshold: {{ .readinessSuccessThreshold }}
+            {{- end }}
             {{- end }}
 
           {{- if and .Values.service.startupProbeGrpc .Values.service.startupProbeGrpc.enabled }}
@@ -139,9 +159,15 @@ spec:
             grpc:
               port: {{ .Values.service.startupProbeGrpc.port | default (.Values.service.grpcProbe.port | default .Values.service.targetPort) }}
             {{- with .Values.service.startupProbeGrpc }}
-            {{- if .periodSeconds }}periodSeconds: {{ .periodSeconds }}{{- end }}
-            {{- if .failureThreshold }}failureThreshold: {{ .failureThreshold }}{{- end }}
-            {{- if .timeoutSeconds }}timeoutSeconds: {{ .timeoutSeconds }}{{- end }}
+            {{- if .periodSeconds }}
+            periodSeconds: {{ .periodSeconds }}
+            {{- end }}
+            {{- if .failureThreshold }}
+            failureThreshold: {{ .failureThreshold }}
+            {{- end }}
+            {{- if .timeoutSeconds }}
+            timeoutSeconds: {{ .timeoutSeconds }}
+            {{- end }}
             {{- end }}
           {{- end }}
 
