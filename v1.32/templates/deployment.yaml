@@ -110,90 +110,49 @@ spec:
               containerPort: {{ .Values.service.targetPort }}
               protocol: TCP
 
+          {{- /* ===================== PROBE PRIORITY =====================
+               1. gRPC
+               2. TCP
+               3. HTTP (default)
+               ========================================================== */}}
+
           {{- /* ===================== gRPC PROBES ===================== */}}
           {{- if and .Values.service.grpcProbe .Values.service.grpcProbe.enabled }}
+
           livenessProbe:
             grpc:
               port: {{ .Values.service.grpcProbe.port | default .Values.service.targetPort }}
-            {{- with .Values.service.grpcProbe }}
-            {{- if .initialDelaySeconds }}
-            initialDelaySeconds: {{ .initialDelaySeconds }}
-            {{- end }}
-            {{- if .periodSeconds }}
-            periodSeconds: {{ .periodSeconds }}
-            {{- end }}
-            {{- if .timeoutSeconds }}
-            timeoutSeconds: {{ .timeoutSeconds }}
-            {{- end }}
-            {{- if .failureThreshold }}
-            failureThreshold: {{ .failureThreshold }}
-            {{- end }}
-            {{- if .successThreshold }}
-            successThreshold: {{ .successThreshold }}
-            {{- end }}
-            {{- end }}
-
           readinessProbe:
             grpc:
               port: {{ .Values.service.grpcProbe.port | default .Values.service.targetPort }}
-            {{- with .Values.service.grpcProbe }}
-            {{- if .readinessInitialDelaySeconds }}
-            initialDelaySeconds: {{ .readinessInitialDelaySeconds }}
-            {{- end }}
-            {{- if .readinessPeriodSeconds }}
-            periodSeconds: {{ .readinessPeriodSeconds }}
-            {{- end }}
-            {{- if .readinessTimeoutSeconds }}
-            timeoutSeconds: {{ .readinessTimeoutSeconds }}
-            {{- end }}
-            {{- if .readinessFailureThreshold }}
-            failureThreshold: {{ .readinessFailureThreshold }}
-            {{- end }}
-            {{- if .readinessSuccessThreshold }}
-            successThreshold: {{ .readinessSuccessThreshold }}
-            {{- end }}
-            {{- end }}
 
-          {{- if and .Values.service.startupProbeGrpc .Values.service.startupProbeGrpc.enabled }}
-          startupProbe:
-            grpc:
-              port: {{ .Values.service.startupProbeGrpc.port | default (.Values.service.grpcProbe.port | default .Values.service.targetPort) }}
-            {{- with .Values.service.startupProbeGrpc }}
-            {{- if .periodSeconds }}
-            periodSeconds: {{ .periodSeconds }}
-            {{- end }}
-            {{- if .failureThreshold }}
-            failureThreshold: {{ .failureThreshold }}
-            {{- end }}
-            {{- if .timeoutSeconds }}
-            timeoutSeconds: {{ .timeoutSeconds }}
-            {{- end }}
-            {{- end }}
-          {{- end }}
+          {{- /* ===================== TCP PROBES ===================== */}}
+          {{- else if and .Values.service.tcpProbe .Values.service.tcpProbe.enabled }}
 
+          livenessProbe:
+            tcpSocket:
+              port: {{ .Values.service.tcpProbe.port | default .Values.service.targetPort }}
+            initialDelaySeconds: {{ .Values.service.tcpProbe.initialDelaySeconds | default 5 }}
+            periodSeconds: {{ .Values.service.tcpProbe.periodSeconds | default 10 }}
+            timeoutSeconds: {{ .Values.service.tcpProbe.timeoutSeconds | default 5 }}
+            failureThreshold: {{ .Values.service.tcpProbe.failureThreshold | default 3 }}
+
+          readinessProbe:
+            tcpSocket:
+              port: {{ .Values.service.tcpProbe.port | default .Values.service.targetPort }}
+            initialDelaySeconds: {{ .Values.service.tcpProbe.readinessInitialDelaySeconds | default 5 }}
+            periodSeconds: {{ .Values.service.tcpProbe.readinessPeriodSeconds | default 10 }}
+            timeoutSeconds: {{ .Values.service.tcpProbe.readinessTimeoutSeconds | default 5 }}
+            failureThreshold: {{ .Values.service.tcpProbe.readinessFailureThreshold | default 3 }}
+
+          {{- /* ===================== HTTP PROBES ===================== */}}
           {{- else }}
 
-          {{- /* ===================== HTTP PROBES (BACKWARD COMPATIBLE) ===================== */}}
           {{- if (.Values.service.livenessProbe).enabled }}
           livenessProbe:
             httpGet:
               path: {{ .Values.service.livenessProbe.path | default "/health" }}
               port: {{ .Values.service.livenessProbe.port | default 80 }}
-            initialDelaySeconds: {{ .Values.service.livenessProbe.initialDelaySeconds | default 600 }}
-            periodSeconds: {{ .Values.service.livenessProbe.periodSeconds | default 60 }}
-            timeoutSeconds: {{ .Values.service.livenessProbe.timeoutSeconds | default 10 }}
-            failureThreshold: {{ .Values.service.livenessProbe.failureThreshold | default 3 }}
-            successThreshold: {{ .Values.service.livenessProbe.successThreshold | default 1 }}
-          {{- end }}
-
-          {{- if (.Values.service.startupProbe).enabled }}
-          startupProbe:
-            httpGet:
-              path: {{ .Values.service.startupProbe.path }}
-              port: {{ .Values.service.startupProbe.port }}
-            periodSeconds: {{ .Values.service.startupProbe.periodSeconds }}
-            failureThreshold: {{ .Values.service.startupProbe.failureThreshold }}
-            timeoutSeconds: {{ .Values.service.startupProbe.timeoutSeconds }}
           {{- end }}
 
           {{- if (.Values.service.readinessProbe).enabled }}
@@ -221,14 +180,6 @@ spec:
       {{- with .Values.tolerations }}
       tolerations:
         {{- toYaml . | nindent 8 }}
-      {{- end }}
-
-      {{- if .Values.dnsConfig }}
-      dnsConfig:
-        nameservers:
-{{ toYaml .Values.dnsConfig.nameservers | indent 8 }}
-        searches:
-{{ toYaml .Values.dnsConfig.searches | indent 8 }}
       {{- end }}
 
       dnsPolicy: {{ .Values.dnsPolicy | default "ClusterFirst" }}
